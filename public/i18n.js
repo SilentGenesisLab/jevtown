@@ -460,4 +460,235 @@ const en = {
     bad_audience: 'The audience description must be at most 200 characters.' },
 };
 
-export const DICTIONARIES = { uk, en };
+/** 中文没有复数变化，量词固定用「位居民」。 */
+const residentsZh = (people) => `${number('zh')(people)} 位居民`;
+
+/**
+ * 中文界面。
+ *
+ * 注意：镇上只有乌克兰人和英语使用者两拨人群（vocab.js 的 POOLS），
+ * 所以中文界面下「被阅读」的仍然是英语小镇（app.js:homePool 把 zh 落到 en）。
+ * 人名和城市名沿用英文原样 —— 都是专有名词，回退比硬翻更不容易出洋相。
+ * 兴趣、职业、年龄、性格、消费等**类别标签**是翻译过的（vocab.js 里有 zh），
+ * 所以界面读起来是完整的中文。
+ */
+const zh = {
+  lang: 'zh',
+  langName: '中文',
+  brand: 'Jevtown',
+  n: number('zh'),
+  and: (items) => (items.length > 1 ? `${items.slice(0, -1).join('、')} 和 ${items.at(-1)}` : items[0]),
+  title: '一个由人写作、一万个 AI 人格阅读的社交网络',
+  lead: '发一段文字、一条转让、一个商品或者一个标题。几秒之内小镇就会做出反应：多数人划过去，有人点赞、转发、拉黑、给卖家留言，或者直接下单。',
+  headLine: (post) => `镇上 ${number('zh')(post.reach)} 人看到 · ${number('zh')(post.stopped)} 人停下 · ${number('zh')(post.glad)} 人喜欢 · ${number('zh')(post.sorry)} 人反感。每一个反应都来自 Jev。`,
+  hero: { eyebrow: '发出去有人看吗？', title: ['这里是人写作，', '一万个 AI 人格阅读。'], write: '写一条', demo: '看看它怎么运作' },
+  show: {
+    kicker: '一份存档示例 · 乌克兰居民', title: '同一台 iPhone 的两种写法',
+    variants: ['写清楚细节，当面验货再付款', '只接受预付'], map: '每一个点都是一万个人格中的一个',
+    loading: '正在载入示例…', unavailable: '示例没能载入。你可以在下面发自己的文字。',
+    findings: [
+      (c) => [`${number('zh')(c.byReaction.wrote)} 个人格给卖家留了言。`, `这条信息进入第二波，触达了 ${number('zh')(c.reach)} 个人格。`],
+      (c) => ['每三个人格里就有一个闻出了骗局的味道。', `这条信息在第一波后就停住了。${number('zh')(c.byReaction.scam)} 人闻出了骗局，看到它的总共 ${number('zh')(c.reach)} 人。`],
+    ],
+  },
+  verdict: {
+    label: '结果',
+    everyone: '全镇都看到了', everyoneAudience: '整个受众都看到了', stopped: (wave) => `没能越过第${['一', '二', '三'][wave] ?? (wave + 1)}波`,
+    reached: (reach, people) => `${number('zh')(people)} 位居民里有 ${number('zh')(reach)} 位看到了。`,
+    reachedAudience: (reach, people) => `受众里的 ${number('zh')(people)} 人中有 ${number('zh')(reach)} 人看到了。`,
+    balance: (glad, sorry) => `喜欢 ${number('zh')(glad)} 人，反感 ${number('zh')(sorry)} 人。`,
+    why: '当一波里喜欢的人比反感的人多出至少这一波的 10%，文字才会继续传播下去。',
+    // 问镇子时得到的回答（shared/presets.js 的 ASKS）：最常见的那一项、并列的两三项、或者没有。
+    asked: {
+      passed: { one: (answer) => `划过去最常见的原因：${answer}。`, equal: (list) => `划过去的人提到这几种原因的频次差不多：${list}。`, none: '划过去的人里没有哪一种原因特别突出。' },
+      annoyed: { one: (answer) => `反感最常见的原因：${answer}。`, equal: (list) => `反感的人提到这几种原因的频次差不多：${list}。`, none: '反感的人里没有哪一种原因特别突出。' },
+      hook: { one: (answer) => `最常让喜欢它的人停下来的：${answer}。`, equal: (list) => `让喜欢它的人停下来的原因，频次差不多的是：${list}。`, none: '让喜欢它的人停下来的原因里，没有哪一项突出。' },
+    },
+  },
+  compare: { title: '对比两个版本', previous: '上一版', current: '这一版' },
+  presets: {
+    post: { name: '帖子', hint: '发在 Telegram、X 或任何信息流里的帖子', promise: '你会看到谁点赞、转发或拉黑', placeholder: '我整整一个月只用 AI 助手写代码，然后把发生的事数了数…' },
+    listing: { name: '转让信息', hint: '一条二手转让，像分类信息网站那样', promise: '你会看到谁给卖家留言、都问了什么', placeholder: 'iPhone 13，128G，蓝色。电池 86%，没修过。2000 元，同城面交…' },
+    product: { name: '商品', hint: '一个商品或服务，连同价格', promise: '你会看到谁会买、在什么价位买', placeholder: '美利奴羊毛跑步袜，连着训练一周也不臭…' },
+    headline: { name: '标题', hint: '一篇文章、一封邮件或一个落地页的标题', promise: '你会看到谁点进去、谁觉得烦', placeholder: '我用一个 4 分钟的习惯换掉了整套晨间流程。30 天后的变化如下' },
+  },
+  mapKeys: '方向键选人，回车打开他的页面',
+  nav: { feed: '信息流', crowd: '小镇', me: '居民', write: '写一条', back: '返回', about: '每一个反应都来自 Jev —— 一个用概率作答、不写文字的模型。' },
+  compose: {
+    readers: { uk: (people) => `由乌克兰小镇阅读，共 ${residentsZh(people)}`, en: (people) => `由英语小镇阅读，共 ${residentsZh(people)}` },
+    readersAudience: { uk: '只有乌克兰小镇里符合这段描述的人会读到它', en: '只有英语小镇里符合这段描述的人会读到它' },
+    audience: '受众', audienceLabel: '写给谁看', audiencePlaceholder: '例如：在 IT 行业工作、关注创业的人',
+    audienceNote: '可选。只有镇上符合这段描述的人会读到这段文字。小镇知道每个人的职业、年龄、兴趣、收入和想买的东西，所以描述里只有这几类信息算数。它会跟着帖子一起显示，之后每个新版本也发给同一批人。',
+    audienceRemove: '去掉受众限定', audienceKept: (text) => `新版本发给同一批人：${text}`, withAudience: '带受众限定测一次',
+    nickname: '你的名字或昵称', anonymous: '匿名', listed: '进入公开信息流', unlisted: '仅通过链接访问',
+    text: '正文', kind: '你要写什么', prices: '价格', currency: '货币',
+    ladder: {
+      title: ['价格单位', '· 写几个价位'],
+      note: '每个在商品前停下来的人，都会被问这些价位里他最高愿意付哪个。你会看到每个价位有多少买家，以及哪一个赚得最多。',
+      add: '再加一个价位', remove: '删掉这个价位', price: (index) => `价位 ${index}`,
+    },
+    go: '发布', busy: '小镇正在阅读…', again: '发布新版本', cancel: '取消', edit: '编辑',
+  },
+  feed: { order: '信息流排序', latest: '最新', top: '传播最远', empty: '这里还没有内容。你的文字会是第一条。', totals: (posts, reach) => `${number('zh')(posts)} 条文字 · 被看过 ${number('zh')(reach)} 次`, versions: (count) => `${count} 个版本` },
+  ago: (ms) => {
+    const minutes = Math.floor(ms / 60000);
+    if (minutes < 1) return '刚刚';
+    if (minutes < 60) return `${minutes} 分钟前`;
+    if (minutes < 60 * 24) return `${Math.floor(minutes / 60)} 小时前`;
+    if (minutes < 60 * 24 * 30) return `${Math.floor(minutes / (60 * 24))} 天前`;
+    return new Date(Date.now() - ms).toLocaleDateString('zh', { month: 'numeric', day: 'numeric' });
+  },
+  rail: { title: '小镇', size: residentsZh, waiting: '等待你的文字', waitingNote: '镇上还没有人看过任何东西。一段文字会先给离它最近的 600 个人看。', voices: '小镇的声音' },
+  voices: { title: '小镇的声音', note: '从做出反应的人里随机抽取。点一个人可以打开他的页面。', noteSaid: '从做出反应的人里随机抽取，也包括一些划过去的人，每人附一条 Jev 给出的回答。点一个人可以打开他的页面。', more: '显示更多', count: (shown, all) => `${number('zh')(shown)} / ${number('zh')(all)}`, nobody: '这里还没有人。', wouldAsk: ['会问', '会问', '会问'], details: '会追问一个转让信息里没写清楚的细节', nothing: '直接要了，没问题' },
+  ladder: { none: '这些价位里一个都不会买', upTo: (cost) => `只会在 ${cost} 或更低时买`, at: (cost) => `会在 ${cost} 买，再高就不买`, even: (cost) => `就算 ${cost} 也会买` },
+  post: { back: '信息流', replay: '重播', everyone: '全部', asking: { listing: '个问题', product: '个价位' }, filter: '点一个反应，看这些人在地图上的位置', picture: (totals) => `一张小镇的地图，每个点是一位居民。${number('zh')(totals.reach)} 人看到，${number('zh')(totals.stopped)} 人停下，${number('zh')(totals.glad)} 人喜欢，${number('zh')(totals.sorry)} 人反感。` },
+  crowd: {
+    title: '小镇', lead: '一万名常住居民，加上访客搬进来的人。每个人都有一个名字、一份工作、几个兴趣、一种脾气和一个钱包。地图上挨着的人彼此相似：越靠上越年轻，越靠下越年长，每一种兴趣都有自己的街区。新居民会安置在镇子下方。',
+    lenses: { interest: '兴趣', field: '职业', age: '年龄', temper: '脾气', budget: '收入' },
+    everyone: '所有人', count: (count, everyone) => (everyone ? '在全镇范围内' : `这一组有 ${number('zh')(count)} 人`), people: '其中几位', hint: '鼠标悬停看这个人。点击打开他的页面。',
+  },
+  looks: { dark: '没被展示', scrolled: '划过去', stopped: '停下', glad: '喜欢', spreads: '转发了', sorry: '反感', hollow: '说不清' },
+  counters: { reach: '看到', stopped: '停下', glad: '喜欢', sorry: '反感' },
+  reactions: Object.fromEntries(Object.entries({
+    scrolled_past: '划过去', read: '读了', liked: '点赞', disliked: '不喜欢', reposted: '转发', followed: '关注', blocked: '拉黑', cant_tell: '说不清',
+    opened: '点开了', saved: '收藏', wrote: '给卖家留言', scam: '怀疑是骗局', looked: '看了看', cart: '加入购物车', bought: '下单了',
+    glanced: '被吸引但没点', clicked: '点进去', annoyed: '觉得被标题党骗了',
+  }).map(([id, label]) => [id, [label, label, label]])),
+  run: {
+    scoring: 'Jev 正在判断该给谁看…',
+    wave: (index, total) => `第 ${index + 1} 波 · 累计 ${number('zh')(total)} 人`,
+    went: '继续传播', stayed: '停在这里', moodNote: (mood) => `本波的情绪值 ${mood}：喜欢的人占比减去反感的人占比。超过 +0.10 就会继续传播。`,
+    followup: (people) => `正在追问停下来的 ${number('zh')(people)} 个人`,
+    asking: '正在向看过的人追问几个问题…',
+    travels: '它站住了，继续往外传', stops: '它停在这里',
+    watching: '小镇正在阅读…', failed: '中间出了点问题，小镇没能读完。刷新页面可以接着看。', stale: '小镇没能读完这段文字。下面是读到的人给出的反应。',
+    done: (waves, seconds, usd) => `${waves} 波 · ${seconds.toFixed(0)} 秒 · $${usd.toFixed(3)}`,
+  },
+  blocks: {
+    shownNote: '信息流算法认为这段文字是写给谁的。分数来自 Jev，0 到 1。',
+    tabs: { stopped: '停下的人', glad: '喜欢的人', sorry: '反感的人', shown: '展示给了', described: '受众' },
+    titles: { stopped: '谁停下来了', glad: '谁喜欢', sorry: '谁反感', shown: '展示给了谁', described: '受众里有谁' },
+    segmentNote: (what, share) => `在哪些人群里抓到的比例最高。就全镇而言，${what}：${share}。`,
+    segmentNoteAudience: (what, share) => `在哪些人群里抓到的比例最高。就受众而言，${what}：${share}。`,
+    describedNote: (people) => `Jev 是怎么读这段描述的：它点名的每一部分、算数的人群，分数 0 到 1。只有符合全部条件的 ${number('zh')(people)} 个人能看到这段文字，镇上其余的人看不到。`,
+    unlistedAudience: '因为受众描述的原因，这条帖子没能进入公开信息流；只能通过链接访问。',
+    alike: '它在各类人身上的效果都差不多，没有哪一组特别突出。以下是最大的几组。',
+    bestPrice: (cost, buyers, revenue) => `${cost} 赚得最多：${number('zh')(buyers)} 位买家，收入 ${revenue}。`,
+    nobody: '没有谁特别突出。',
+    questions: '买家会问什么', questionsNote: (asked) => `停下来的 ${number('zh')(asked)} 个人，最先会问卖家的那个问题。`,
+    demand: '他们愿意付多少', demandNote: (asked) => `停下来的 ${number('zh')(asked)} 个人里，最高愿意出的价。`,
+    buyers: '买家', revenue: '收入', best: '赚得最多',
+    versionDelta: '对比上一版',
+    unlisted: '这段文字没能进入公开信息流；只能通过链接访问。',
+    hiddenByAuthor: '作者把它挡在了公开信息流之外。',
+    annoyedGroup: (group, sorry, reached) => `看到的人里最容易反感的群体：「${group}」，${number('zh')(reached)} 人中有 ${number('zh')(sorry)} 人。`,
+  },
+  said: {
+    tabs: { scrolled: '为什么划过去', sorry: '为什么反感', hook: '什么让他们停下', comment: '会怎么评论' },
+    titles: { scrolled: '为什么划过去', sorry: '为什么反感', hook: '什么让喜欢它的人停下来', comment: '他们会在评论区写什么' },
+    notes: {
+      scrolled: (asked) => `问的是 ${number('zh')(asked)} 位划过去的人`, sorry: (asked) => `问的是 ${number('zh')(asked)} 位反感的人`, hook: (asked) => `问的是 ${number('zh')(asked)} 位喜欢它的人`,
+      comment: (asked) => `问的是 ${number('zh')(asked)} 位停下来的人`,
+    },
+    order: '，按信息流给他们看这段文字的顺序，所以多数是它本来就想找的人。',
+    commentNote: '「不评论」本身就是选项之一，而这里的占比是在 Jev 能定位的人当中算的。',
+    point: '指向一个回答，就能在地图上看到这些人。',
+    lead: '高亮的是：出现最多的那个回答，或者并列在最前面的两三个。',
+    flat: '没有哪个回答突出：最前面并列的超过三个。',
+    drain: (share) => `在 ${share} 的被问者身上，关于这个人没有任何线索能指向某个回答。柱子把这些人排除在外。`,
+    split: (text, readers) => `这些回答里，${text} 是关于文字本身的，${readers} 是关于读它的人的。`,
+    labels: {
+      why: { not_for_them: '跟他们的生活无关', weak_opening: '开头没有勾住人', unclear: '看不出来是什么', too_long: '太长，读不进去', nothing_new: '没什么新鲜的', distrust: '不太可信', tone: '语气让人不舒服', disagree: '跟他们的看法相左', price: '太贵了', missing: '缺了重要的信息' },
+      hook: {
+        example: '一个具体的数字或例子', story: '一段个人经历', useful: '一条用得上的建议', humour: '好笑', opinion: '一个他们认同的观点', opening: '第一句话', topic: '就是话题本身',
+        price: '价格', details: '细节', trust: '对卖家的信任', terms: '交易方式', need: '单纯是需要它',
+        benefit: '它能解决自己的问题', claims: '说法可信', guarantee: '有质保或者退货容易',
+        curiosity: '好奇', promise: '这个承诺', detail: '一个具体的数字或细节', news: '听起来很新、很重要',
+      },
+      comment: { adds_own: '表示认同，并补充自己的经历', question: '问作者一个问题', argues: '反驳，或者指出一个错误', thanks: '道谢或简单夸两句', joke: '讲个笑话', tags: '艾特一个朋友', none: '不会评论' },
+    },
+  },
+  checks: {
+    title: 'Jev 是怎么读这段文字的',
+    note: '这是 Jev 对文字本身的回答，不是小镇的反应。它不会改变谁能看到这条内容。',
+    labels: {
+      point_first: { listing: '第一句话说了在卖什么' },
+      ask: { post: '读者该做什么很清楚', listing: '说明了交易怎么进行', product: '说明了下一步做什么' },
+      concrete: '有具体的数字、名字或例子',
+    },
+    values: { yes: '是', no: '否', unclear: '不清楚' },
+  },
+  segments: { interest: (label) => `喜欢${label}`, field: (label) => label, age: (label) => `${label}`, temper: (label) => label, budget: (label) => label, shopping: (label) => `想买${label}`, city: (label) => label },
+  fields: { it: 'IT 从业者', creative: '创意工作者', education: '教师', medicine: '医护', trades: '技术工人', retail: '零售与服务', office: '办公室职员', finance: '金融从业者', business: '商业与销售', public: '公职人员', agriculture: '农民', transport: '司机与快递员', home: '全职家长', student: '学生', retired: '退休人员' },
+  tempers: { lurker: '潜水党', skeptic: '怀疑派', supporter: '热心人', enthusiast: '爱转发的人', bargain_hunter: '比价达人', trend_chaser: '追热点的人', nitpicker: '挑刺的人', troll: '杠精' },
+  answers: null, // 英文回答才是 Jev 真正读的那份，在 shared/presets.js 里
+  persona: { lives: '住在这里', history: '他们如何对待新文字', noHistory: '新文字没有触达他们。', shopping: '想买', nothing: '没有特别想买的', neighbours: '亮起来的是主兴趣相同的人。地图上挨着的人彼此相似：年龄相同，兴趣也相同。', newStreet: '亮起来的是主兴趣相同的人。新居民按搬来的顺序安置在镇子下方，所以这里挨着的人可能什么样都有。', since: (date) => `入住于 ${date}`, write: '写一条', next: '邻居', years: (age) => `${age} 岁` },
+  blocked: {
+    text: (reasons) => `没有发布${reasons.length ? `：这段文字含有${reasons.join('、')}` : ''}。改写之后再试。`,
+    audience: (reasons) => `没有发布${reasons.length ? `：受众描述含有${reasons.join('、')}` : ''}。改写之后再试。`,
+    reasons: { hate: '针对人群的仇恨', sexual: '露骨的性内容', violence: '威胁', private_data: '他人的隐私信息', illegal: '违法的交易', insult: '侮辱', gibberish: '没有意义，只有乱码' },
+  },
+  me: {
+    eyebrow: '一位新居民', editEyebrow: '你的居民', title: '把一位居民搬进 Jevtown',
+    lead: '编一个人物，他会在镇上其他的 10000 人旁边安家。他会和别人一样阅读新帖子并做出反应，由 Jev 替他作答。他可以很像你，也可以完全是另一个人。',
+    form: {
+      name: '名字', gender: '是谁', genders: { female: '她', male: '他' }, age: '年龄', job: '做什么工作', city: '城市',
+      interests: '兴趣', interestsNote: '最多选三个。第一个会成为主兴趣，决定他在地图上的街区。', main: '主兴趣', chosen: '已选', drop: '移除',
+      temper: '在信息流里的行为方式', budget: '收入',
+      about: '用他自己的话说', aboutNote: '只有 Jev 会读这段', aboutHint: '什么样的话题能勾住这个人、什么会让他烦。例如：「我最受不了全大写和成功学，但关于狗的内容我都看。」',
+      shown: '镇上所有人都能看到名字、年龄、职业、城市和兴趣。这是虚构角色，请不要写真实姓名、住址和电话。',
+      create: '搬进来', save: '保存', cancel: '取消',
+    },
+    years: (age) => `${age} 岁`,
+    edit: '修改', editTitle: '修改这位居民', page: '他在镇上的页面',
+    moved: (date) => `入住于 ${date}。会和所有人一起阅读新帖子。`,
+    hello: { title: (name) => `${name} 现在住在 Jevtown 了`, note: (number) => `门牌号 ${number}。新帖子会像送到镇上每个人那里一样送到这里。` },
+    feed: '他们如何对待新帖子',
+    tune: {
+      step: '第 1 步', title: '演示你的居民在信息流里怎么表现',
+      note: (cards) => `${cards} 条帖子。说说你的居民会怎么处理每一条。如果他很像你，就按你自己的选择来。Jev 会记住这些回答，此后替这位居民作答时都会参考，信息流里也一样。`,
+      start: '开始', more: '再来一轮', kept: (n) => `Jev 记住了 ${n} 个反应`,
+    },
+    test: {
+      step: '第 2 步', title: 'Jev 会和你答得一样吗？',
+      note: (cards) => `${cards} 条新帖子。你先答，然后 Jev 答。它看不到你对这些帖子的回答。`,
+      start: '试试看', again: '再试一次', locked: '请先完成第 1 步。', busy: 'Jev 正在替这位居民作答…', retry: '再试一次',
+    },
+    over: (cards) => `你已经答完了全部 ${cards} 条帖子。`,
+    quiz: { ask: '你的居民会怎么处理这条帖子？', progress: (index, total) => `${index} / ${total}`, back: '上一条', leave: '离开' },
+    do: { scrolled_past: '划过去', read: '读了', liked: '点赞', disliked: '不喜欢', reposted: '转发', followed: '关注', blocked: '拉黑' },
+    result: {
+      title: '最近一次测试', withAnswers: '的 Jev 回答和你一致', byDescription: '仅凭描述、不做第 1 步就能答对的比例',
+      rounds: '每一次测试', round: (index) => `第 ${index} 次`, of: (hit, asked) => `${hit} / ${asked}`, plainShort: (hit) => `仅凭描述 ${hit}`,
+    },
+    answers: { title: 'Jev 关于这位居民知道什么', note: '你所有的回答。Jev 替这位居民作答时，会取跟这条帖子最接近的六条。', empty: '目前只有描述。', you: '你说', guessed: 'Jev 答得一样', missed: (word) => `Jev 说：「${word}」` },
+    lives: '他在地图上的位置', pick: '选一个兴趣看它的街区。',
+    nearest: '一位和他很像的居民',
+    reset: '忘掉这些反应', resetSure: 'Jev 会忘掉这位居民的所有反应和测试。继续吗？',
+    remove: '把居民搬走', removeSure: '描述和所有反应都会被清空，另一个人会住进这间房子。继续吗？',
+    errors: {
+      bad_profile: '需要名字、年龄、「她」或「他」、至少一个兴趣，以及这位居民在信息流里的行为方式。',
+      blocked: (reasons) => `居民没有搬进来${reasons.length ? `：描述含有${reasons.join('、')}` : ''}。改写之后再试。`,
+      full: '镇上暂时没有空房子了。',
+      limit: '今天到此为止，明天再试。', jev: 'Jev 暂时没有回应。什么都不会丢，再试一次。',
+    },
+  },
+  card: { open: '帖子卡片', saw: (people) => `在 ${number('zh')(people)} 位居民中看到`, sawAudience: (people) => `在受众的 ${number('zh')(people)} 人中看到`, share: '分享', download: '保存为 PNG', close: '关闭' },
+  share: '复制链接', copied: '已复制', version: '版本',
+  audience: {
+    line: (text) => `受众：${text}`,
+    size: (people) => `镇上有 ${number('zh')(people)} 人符合它的每一项`,
+    part: { field: '职业', age: '年龄', interest: '兴趣', budget: '收入', shopping: '想买' },
+    partWord: { field: '职业', age: '年龄', interest: '兴趣', budget: '收入', shopping: '想买的东西' },
+    open: (list) => `描述没有限定：${list}。`,
+    outside: '不在受众里',
+    picture: '镇上其余的人不在受众里，保持暗色。',
+    legend: { dark: '不在受众里', waiting: '在受众里，尚未展示' },
+  },
+  errors: { limit: '今天的发布次数用完了。明天再来，或者用你自己的 key 跑一份。', empty: '先写点东西，一行就够。', bad_text: '正文长度需要在 1 到 2000 个字符之间。', bad_prices: '修正标出的价格：至少两个不同的数字。', no_key: '服务器上没有配置 Jev 的 key。', not_yours: '只有作者、并且是同一个浏览器，才能发布新版本。', bad_request: '这个请求没被理解。刷新页面再试。', busy: '上一个版本还在跑。等它结束。', not_found: '没有这个页面。', error: '出了点问题，再试一次。',
+    no_fit: '小镇判断不出谁符合这段描述。请用职业、年龄、兴趣、收入或者想买的东西来描述，想要全镇就把这里留空。',
+    few_fit: (fits, least) => `镇上符合描述每一项的人有 ${number('zh')(fits)} 位。一次检查至少需要 ${least} 位。少写几项，或者写得更宽泛一些。`,
+    bad_audience: '受众描述最多 200 个字符。' },
+};
+
+export const DICTIONARIES = { uk, en, zh };

@@ -67,7 +67,9 @@ export function persona(pool, id, interests = null) {
   const wanted = INTEREST[interests[0]].shopping;
   const shopping = u('shopping') < 0.4 ? 'nothing' : wanted && u('shopping-own') < 0.45 ? wanted : SHOPPING[1 + Math.floor(u('shopping-any') * (SHOPPING.length - 1))].id;
 
-  return { pool, id, x, y, name: { en: nameEn, uk: nameUk }, gender, age, ageGroup, city: { en: cityEn, uk: cityUk }, job, field, interests, temper, budget, spending, shopping };
+  // 中文界面没有对应的人群池（镇上只有乌克兰人和英语使用者），
+  // 所以中文沿用英文的名和城市——都是专有名词，回退比翻坏好。
+  return { pool, id, x, y, name: { en: nameEn, uk: nameUk, zh: nameEn }, gender, age, ageGroup, city: { en: cityEn, uk: cityUk, zh: cityEn }, job, field, interests, temper, budget, spending, shopping };
 }
 
 function pickOther(taken, u) {

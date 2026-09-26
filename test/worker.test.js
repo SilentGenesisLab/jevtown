@@ -25,7 +25,7 @@ test('the opening request scores the text and decides whether it may be listed',
   assert.deepEqual(openingAnswers({ 'unlisted:insult': { noul: 0.84 }, 'unlisted:gibberish': { noul: 0.85 } }), { scores: {}, unlisted: ['insult', 'gibberish'], blocked: ['gibberish'], checks: {} });
 });
 
-test('every reaction has a look and words in both languages', () => {
+test('every reaction has a look and words in every language', () => {
   for (const [presetId, preset] of Object.entries(PRESETS)) {
     for (const reaction of Object.keys(preset.reactions)) {
       assert.ok(LOOKS[lookOf(presetId, reaction)], `${presetId}.${reaction} has no look`);
@@ -36,7 +36,7 @@ test('every reaction has a look and words in both languages', () => {
   for (const answer of Object.keys(PRESETS.listing.followUp.answers)) assert.ok(DICTIONARIES.uk.answers[answer], `uk: no words for the buyer's question ${answer}`);
 });
 
-test('every closing answer and text check has words in both languages', () => {
+test('every closing answer and text check has words in every language', () => {
   for (const t of Object.values(DICTIONARIES)) {
     for (const [question, { presets }] of Object.entries(ASKS)) {
       for (const presetId of presets) {
@@ -59,7 +59,8 @@ test('every closing answer and text check has words in both languages', () => {
       assert.equal(typeof sentences.none, 'string', `${t.lang}: ${key}.none`);
     }
     assert.equal(t.and(['a']), 'a');
-    assert.match(t.and(['a', 'b', 'c']), /^a, b \S+ c$/);
+    // The separator differs by language (a comma in Ukrainian and English, 、 in Chinese); the order does not.
+    assert.match(t.and(['a', 'b', 'c']), /^a[,、]\s?b\s\S+\s?c$/);
     // What the page already showed keeps its shape.
     for (const key of ['label', 'everyone', 'why']) assert.equal(typeof t.verdict[key], 'string', `${t.lang}: verdict.${key}`);
     for (const key of ['stopped', 'reached', 'balance']) assert.equal(typeof t.verdict[key], 'function', `${t.lang}: verdict.${key}`);
@@ -177,8 +178,8 @@ test('a question Jev fails leaves out its own lists and keeps what the others pa
   assert.deepEqual(logged.mock.calls[0].arguments.slice(0, 2), ['ask', 'hook']);
 });
 
-test('both languages have the same words, down to every key', () => {
-  const { uk, en } = DICTIONARIES;
+test('every language has the same words, down to every key', () => {
+  const { uk, en, zh } = DICTIONARIES;
   const missing = [];
   const walk = (a, b, path) => {
     for (const key of new Set([...Object.keys(a), ...Object.keys(b)])) {
@@ -190,8 +191,10 @@ test('both languages have the same words, down to every key', () => {
     }
   };
   walk(uk, en, '');
+  walk(uk, zh, '');
+  walk(en, zh, '');
   assert.deepEqual(missing, []);
-  for (const t of [uk, en]) {
+  for (const t of [uk, en, zh]) {
     for (const words of [t.audience.size(712), t.audience.line('gardeners'), t.audience.open(t.and(['age', 'money'])), t.compose.audienceKept('gardeners'), t.verdict.reachedAudience(600, 712),
       t.blocks.describedNote(712), t.blocks.segmentNoteAudience('stopped', '10%'), t.blocked.audience(['hate']), t.errors.few_fit(1, 50), t.card.sawAudience(712), t.compose.readersAudience.uk, t.compose.readersAudience.en]) {
       assert.ok(typeof words === 'string' && words.length > 5 && !words.includes('undefined'), `${t.lang}: ${words}`);

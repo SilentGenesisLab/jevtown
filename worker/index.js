@@ -618,7 +618,10 @@ async function pageHead(request, env, url) {
   const id = url.pathname.startsWith('/p/') && url.pathname.slice(3);
   const post = id && (await env.DB.prepare('SELECT id, preset, pool, snippet, version, reach, stopped, glad, sorry FROM posts WHERE id = ? AND version > 0').bind(id).first());
   // A post is described in its own language, any other page in the visitor's.
-  const t = DICTIONARIES[post ? post.pool : /^(uk|ru)/i.test(request.headers.get('Accept-Language') ?? '') ? 'uk' : 'en'];
+  // A post's pool is always 'uk' or 'en' (there is no Chinese crowd), so only the visitor branch can be 'zh'.
+  const accept = request.headers.get('Accept-Language') ?? '';
+  const fromHeader = /^(uk|ru)/i.test(accept) ? 'uk' : /^zh/i.test(accept) ? 'zh' : 'en';
+  const t = DICTIONARIES[post ? post.pool : fromHeader];
   let title = `${t.brand} · ${t.title}`;
   let description = t.lead;
   let image = `${url.origin}/brand/og-default.png`;

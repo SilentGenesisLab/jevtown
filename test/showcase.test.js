@@ -17,7 +17,7 @@ test('the numbers of the example on the first screen are counted from its saved 
   }
 });
 
-test('what the example says in words holds for its numbers, in both languages', () => {
+test('what the example says in words holds for its numbers, in every language', () => {
   const [careful, advance] = example.versions.map((version) => version.counters);
   assert.equal(careful.reach, 2100); // "went into a second wave": 600 + 1,500
   assert.equal(advance.reach, 600); // "never left the first wave"

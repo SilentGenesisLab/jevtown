@@ -44,7 +44,7 @@ const store = {
   },
 };
 
-let lang = store.get('lang') ?? (/^(uk|ru)/.test(navigator.language) ? 'uk' : 'en');
+let lang = store.get('lang') ?? (/^(uk|ru)/.test(navigator.language) ? 'uk' : /^zh/i.test(navigator.language) ? 'zh' : 'en');
 let t = DICTIONARIES[lang];
 let leave = () => {}; // what the current view must stop doing when the visitor goes elsewhere
 let writeNext = false; // "Write" in the menu: the composer takes the cursor once the front page is there
@@ -121,7 +121,13 @@ async function api(path, options) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const percent = (share) => (share > 0 && share < 0.01 ? '<1%' : `${Math.round(share * 100)}%`);
-const clip = (text, length) => (text.length > length ? `${text.slice(0, length).trimEnd()}…` : text);
+const clip = (text, length) => { const s = text ?? ''; return s.length > length ? `${s.slice(0, length).trimEnd()}…` : s; };
+/**
+ * A quiz card is a post written in English or Ukrainian, and the residents are its readers;
+ * a Chinese page shows the English one, the way it shows their names.
+ * Reading card[lang] directly leaves a Chinese page with undefined, which then reaches clip().
+ */
+const cardText = (card) => card?.[lang] ?? card?.en ?? '';
 const ago = (iso) => t.ago(Math.max(0, Date.now() - new Date(iso).getTime()));
 
 /**
@@ -141,7 +147,7 @@ async function loadTown() {
   houses = fresh;
   towns = {};
 }
-const cityLabels = Object.fromEntries(Object.values(POOLS).flatMap((pool) => pool.cities.map(([english, ukrainian]) => [english, { en: english, uk: ukrainian }])));
+const cityLabels = Object.fromEntries(Object.values(POOLS).flatMap((pool) => pool.cities.map(([english, ukrainian]) => [english, { en: english, uk: ukrainian, zh: english }])));
 
 /**
  * What the Worker keeps of a check: the reaction of every persona, the wave that reached it, its follow-up answer,
@@ -1659,7 +1665,7 @@ function mePage(view, me) {
           h('span', { class: 'quiz-count' }, t.me.quiz.progress(given.length + 1, cards.length)),
           h('div', { class: 'quiz-bar', role: 'presentation' }, h('i', { style: `width:${(given.length / cards.length) * 100}%` })),
           h('button', { type: 'button', class: 'quiet', onclick: leaveQuiz }, t.me.quiz.leave)),
-        h('article', { class: 'quiz-card', 'aria-live': 'polite' }, postHead({ nickname: card.by, preset: 'post' }, new Date(Date.now() - (5 + (hash(card.id) % 300)) * 60000).toISOString()), h('p', { class: 'quiz-text' }, card[lang])),
+        h('article', { class: 'quiz-card', 'aria-live': 'polite' }, postHead({ nickname: card.by, preset: 'post' }, new Date(Date.now() - (5 + (hash(card.id) % 300)) * 60000).toISOString()), h('p', { class: 'quiz-text' }, cardText(card))),
         h('p', { class: 'quiz-ask' }, t.me.quiz.ask),
         h('div', { class: 'quiz-do' }, ...QUIZ_REACTIONS.map((reaction, index) => h('button', { type: 'button', class: 'do', onclick: () => answer(reaction) }, lookDot(reaction), doWord(reaction), h('kbd', {}, index + 1)))),
         given.length > 0 && h('button', { type: 'button', class: 'quiet', onclick: () => (given.pop(), paintCard()) }, icon('back', 15), t.me.quiz.back));
@@ -1772,7 +1778,7 @@ function mePage(view, me) {
     if (!card) return null;
     const hit = answer.kind === 'test' && answer.jev === answer.human;
     return h('li', { class: answer.kind === 'test' ? (hit ? 'guess hit' : 'guess miss') : 'guess' },
-      h('p', { class: 'guess-text' }, clip(card[lang], 140)),
+      h('p', { class: 'guess-text' }, clip(cardText(card), 140)),
       h('p', { class: 'guess-said' },
         h('span', {}, h('span', { class: 'dim' }, `${t.me.answers.you}: `), lookDot(answer.human), doWord(answer.human).toLowerCase()),
         answer.kind === 'test' && h('span', { class: hit ? 'guess-verdict hit' : 'guess-verdict miss' }, hit ? [icon('check', 14), t.me.answers.guessed] : t.me.answers.missed(doWord(answer.jev).toLowerCase()))));
@@ -1812,7 +1818,7 @@ function paintShell(path) {
         document.querySelector('.composer textarea')?.focus({ preventScroll: true });
       } else go('/');
     } }, icon('pen', 18), h('span', {}, t.nav.write)));
-  put(document.getElementById('lang'), ...[['uk', 'UA'], ['en', 'EN']].map(([id, label]) => h('button', { type: 'button', class: id === lang ? 'on' : '', 'aria-pressed': id === lang, 'aria-label': DICTIONARIES[id].langName, lang: id, onclick: () => {
+  put(document.getElementById('lang'), ...[['uk', 'UA'], ['en', 'EN'], ['zh', '中文']].map(([id, label]) => h('button', { type: 'button', class: id === lang ? 'on' : '', 'aria-pressed': id === lang, 'aria-label': DICTIONARIES[id].langName, lang: id, onclick: () => {
     if (id === lang) return;
     lang = id;
     t = DICTIONARIES[lang];
