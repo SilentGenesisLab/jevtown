@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
 import { renderOg, OG_W, OG_H } from '../worker/og.js';
 import { openingRequest, openingAnswers, checksFor } from '../public/shared/requests.js';
 import { PRESETS, ASKS, lookOf, answersFor, LOOKS, CANT_TELL } from '../public/shared/presets.js';
@@ -65,6 +66,30 @@ test('every closing answer and text check has words in every language', () => {
     for (const key of ['label', 'everyone', 'why']) assert.equal(typeof t.verdict[key], 'string', `${t.lang}: verdict.${key}`);
     for (const key of ['stopped', 'reached', 'balance']) assert.equal(typeof t.verdict[key], 'function', `${t.lang}: verdict.${key}`);
   }
+});
+
+/**
+ * A code the client has no words for falls back to a generic "something went wrong", which hides the
+ * reason from whoever hit it. A 429 from Jev reaches a visitor as `throttled`, so an unwritten code is
+ * a message nobody can act on. The codes are read off the source, so a new one has to come with words.
+ */
+test('every error the Worker can refuse with has words in every language', () => {
+  const codes = new Set([
+    // `refuse(error.throttled ? 'throttled' : 'jev', …)` picks its code at the call site.
+    'throttled', 'jev',
+  ]);
+  for (const dir of ['worker', 'public/shared']) {
+    for (const name of readdirSync(dir)) {
+      if (!name.endsWith('.js')) continue;
+      for (const found of readFileSync(`${dir}/${name}`, 'utf8').matchAll(/refuse(?:Attempt)?\(\s*'([a-z_]+)'/g)) codes.add(found[1]);
+    }
+  }
+  assert.ok(codes.size > 10, 'the codes were not read off the source');
+  const missing = [];
+  for (const t of Object.values(DICTIONARIES)) {
+    for (const code of codes) if (!t.errors[code] && !t.me.errors[code]) missing.push(`${t.lang}:${code}`);
+  }
+  assert.deepEqual(missing, []);
 });
 
 // -- asking the town at the last close (worker/town.js), against a small stand-in for D1
