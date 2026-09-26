@@ -12,7 +12,8 @@
     "run_worker_first": ["/", "/crowd", "/me", "/p/*", "/u/*", "/api/*", "/og/*"]
   },
   // database_id: `npx wrangler d1 create jev-crowd` prints it; a fork needs its own. Local development ignores it.
-  "d1_databases": [{ "binding": "DB", "database_name": "jev-crowd", "database_id": "49ba3cde-ac62-4a66-8658-a91e593530ee", "migrations_dir": "migrations" }],
+  // The id below belongs to the upstream author — replace it before deploying to your own account.
+  "d1_databases": [{ "binding": "DB", "database_name": "jev-crowd", "database_id": "REPLACE_WITH_YOUR_OWN_D1_ID", "migrations_dir": "migrations" }],
   "vars": {
     // Checks one address may start per day, and what all visitors together may spend per day; 0 = no limit.
     "CROWD_DAILY_LIMIT": "10",
@@ -22,6 +23,8 @@
     // "typesafe" or "openrouter"; empty means whichever key is set, TypeSafe first.
     "JEV_PROVIDER": ""
   },
-  "routes": [{ "pattern": "jevtown.ivanhabor.com", "custom_domain": true }],
+  // The upstream author serves this at jevtown.ivanhabor.com. A fork must not claim that domain:
+  // leave this out and you get <worker-name>.<your-subdomain>.workers.dev, or set your own pattern here.
+  // "routes": [{ "pattern": "jevtown.example.com", "custom_domain": true }],
   "observability": { "enabled": true }
 }
